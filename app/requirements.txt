@@ -1,0 +1,12 @@
+ctranslate2==4.6.0
+fastapi==0.116.2
+faster_whisper==1.2.0
+huggingface_hub==0.27.0
+librosa==0.11.0
+pydantic==2.11.9
+pydantic_settings==2.10.1
+silero_vad==6.0.0
+soundfile==0.13.1
+torch==2.8.0
+transformers==4.47.1
+#ffmpeg-git-full == https://www.gyan.dev/ffmpeg/builds/
