@@ -1,9 +1,9 @@
 import logging
 from pathlib import Path
-from core.config import settings
-from models.transcibeModels import TranscribeResponse
-from utils.file_utils import ensure_dir, dir_is_empty, _has_cuda
-from utils.transcribe_utils import _regroup_segments_using_word_timestamps, _apply_padding, _format_timestamp, load_audio_any
+from ..core.config import settings
+from ..models.transcibeModels import TranscribeResponse
+from ..utils.file_utils import ensure_dir, dir_is_empty, _has_cuda
+from ..utils.transcribe_utils import _regroup_segments_using_word_timestamps, _apply_padding, _format_timestamp, load_audio_any
 import tempfile
 import os
 

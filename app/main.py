@@ -1,8 +1,8 @@
 import logging
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
-from routers.transcribe_router import router as transcribe_router
-from routers.translate_router import router as translate_router
+from .routers.transcribe_router import router as transcribe_router
+from .routers.translate_router import router as translate_router
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("app")

@@ -1,9 +1,9 @@
 import logging
 from pathlib import Path
-from core.config import settings
-from utils.file_utils import ensure_dir, dir_is_empty, _has_cuda
+from ..core.config import settings
+from ..utils.file_utils import ensure_dir, dir_is_empty, _has_cuda
 import subprocess
-from utils.transcribe_utils import _format_timestamp
+from ..utils.transcribe_utils import _format_timestamp
 
 import ctranslate2
 from huggingface_hub import snapshot_download
@@ -35,6 +35,7 @@ def ensure_model_downloaded(model_id: str):
 def ensure_model_converted(model_id: str):
     model_dir = _ct2_model_dir(model_id)
     ensure_dir(str(model_dir))
+    logger.info("Ensuring Directory exists: %s", model_dir)
 
     if dir_is_empty(str(model_dir)):
         logger.info("Converting model %s to CTranslate2 format at %s...", model_id, model_dir)

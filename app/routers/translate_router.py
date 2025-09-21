@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException, Body
-from services.translation_serivce import translate_text, translate_segments
-from models.translateModels import TranslateRequest, TranslateResponse, TranslateSegmentSrt, TranslateSegmentsRequest
+from ..services.translation_serivce import translate_text, translate_segments
+from ..models.translateModels import TranslateRequest, TranslateResponse, TranslateSegmentSrt, TranslateSegmentsRequest
 
 router = APIRouter(prefix="/translate", tags=["translation"])
 

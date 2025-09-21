@@ -1,8 +1,8 @@
 from pathlib import Path  
 from fastapi import APIRouter, UploadFile, File, HTTPException
 import tempfile, shutil, os
-from services.transcribe_service import transcribe, transcribe2srt
-from models.transcibeModels import TranscribeResponse, TranscribeToSRTResponse
+from ..services.transcribe_service import transcribe, transcribe2srt
+from ..models.transcibeModels import TranscribeResponse, TranscribeToSRTResponse
 
 
 router = APIRouter(prefix="/transcribe", tags=["transcription"])
