@@ -1,11 +1,17 @@
 from pathlib import Path  
-from fastapi import APIRouter, UploadFile, File, HTTPException
+from fastapi import APIRouter, UploadFile, File, HTTPException, Depends
 import tempfile, shutil, os
+
+from .dependencies import get_token_header
 from ..services.transcribe_service import transcribe, transcribe2srt
 from ..models.transcibeModels import TranscribeResponse, TranscribeToSRTResponse
 
 
-router = APIRouter(prefix="/transcribe", tags=["transcription"])
+router = APIRouter(
+    prefix="/transcribe", 
+    tags=["transcription"], 
+    dependencies=[Depends(get_token_header)],
+    responses={401: {"description": "Unauthorized"}})
 
 
 @router.post("/audio_video")

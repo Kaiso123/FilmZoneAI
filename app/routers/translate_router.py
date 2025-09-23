@@ -1,8 +1,12 @@
-from fastapi import APIRouter, HTTPException, Body
+from fastapi import APIRouter, HTTPException, Body, Depends
 from ..services.translation_serivce import translate_text, translate_segments
 from ..models.translateModels import TranslateRequest, TranslateResponse, TranslateSegmentSrt, TranslateSegmentsRequest
+from .dependencies import get_token_header
 
-router = APIRouter(prefix="/translate", tags=["translation"])
+router = APIRouter(prefix="/translate", 
+                   tags=["translation"], 
+                   dependencies=[Depends(get_token_header)], 
+                   responses={401: {"description": "Unauthorized"}})
 
 
 @router.post("/text", response_model=TranslateResponse)

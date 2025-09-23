@@ -46,18 +46,23 @@ class MCPAgent:
             raise ValueError("Session not initialized. Call connect_to_server first.")
 
         # Prepare prompt for Agent to decide on tool and inputs
-        system_prompt = (
+        system_prompt_1 = (
             "You are an AI agent that selects the appropriate tool based on the user query. "
             "Available tools:\n" + "\n".join([f"- {tool['name']}: [{tool['description']},\n {tool['input_schema']}]" for tool in self.available_tools]) + "\n"
             "For the query, output ONLY a JSON object with: "
             "{'tool_name': 'selected_tool', 'inputs': {json_inputs_for_tool}}"
             "If no tool matches, set 'tool_name' to None."
         )
-        prompt = f"Query: {query}\nSelect tool and generate inputs."
+        system_prompt_2 = (
+            "You are a helpful AI agent that provides concise answers to user queries."
+            "Based on those information below that from the output of previous using tool, provide a concise answer but politely."
+        )
 
+        prompt = f"Query: {query}\nSelect tool and generate inputs."
+        prompt_answer = f"Query: {query}\nProvide a concise answer."
         # Call model API to get tool selection and inputs
         response = self.model.generate_content(
-            [system_prompt, prompt],
+            [system_prompt_1, prompt],
             generation_config={"max_output_tokens": 500}
         )
         llm_output = response.text.strip()
@@ -79,7 +84,11 @@ class MCPAgent:
         # Call the selected tool
         try:
             result = await self.session.call_tool(tool_name, inputs)
-            return result.content  
+            print(result.content)
+            response = self.model.generate_content(
+                [system_prompt_2, prompt_answer, f"Tool Output: {result.content}"]
+            )
+            return response.text.strip()
         except Exception as e:
             return f"Error calling tool {tool_name}: {str(e)}"
 
