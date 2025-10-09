@@ -2,6 +2,15 @@ from datetime import datetime, timedelta, timezone
 import jwt
 from passlib.context import CryptContext
 from app.core.config import settings
+from mcp.server.auth.provider import (
+    AccessToken,
+    AuthorizationCode,
+    AuthorizationParams,
+    OAuthAuthorizationServerProvider,
+    RefreshToken,
+    construct_redirect_uri,
+)
+from mcp.shared.auth import OAuthClientInformationFull, OAuthToken
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
