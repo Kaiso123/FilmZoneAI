@@ -12,9 +12,12 @@ transformers==4.47.1
 # ffmpeg-git-full == https://www.gyan.dev/ffmpeg/builds/
 uvicorn[standard]==0.32.0
 python-multipart==0.0.9
-httpx-sse==0.4.1
-mcp==1.14.1
-sse-starlette==3.0.2
-google-generativeai
-python-dotenv
-PyJWT
+redis==7.1.0
+rq==2.6.1
+# httpx-sse==0.4.1
+# # mcp==1.14.1
+# sse-starlette==3.0.2
+# # google-generativeai
+# python-dotenv
+# PyJWT
+# torchcodec
