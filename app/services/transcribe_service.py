@@ -15,6 +15,23 @@ _loaded_models = {}
 def _model_dir(model_id: str) -> Path:
     return Path(settings.STORAGE_DIR) / settings.TRANSCRIBE_DIR / model_id
 
+def cleanup_pytorch_weights(model_dir: Path):
+    ct2_weight = model_dir / "model.bin"
+    if not ct2_weight.exists():
+        logger.warning("model.bin not found, skip cleanup")
+        return
+
+    candidates = [
+        model_dir / "pytorch_model.bin",
+        model_dir / "pytorch_model.bin.index.json",
+        model_dir / "model.safetensors",
+    ]
+
+    for f in candidates:
+        if f.exists():
+            f.unlink()
+            logger.info("Removed unused PyTorch weight: %s", f)
+
 def ensure_model_downloaded(model_id: str):
     """
     Nếu thư mục rỗng/không tồn tại thì gọi hàm download từ faster_whisper.
@@ -39,6 +56,7 @@ def ensure_model_downloaded(model_id: str):
             return
 
         download_model(size_or_id=model_id, output_dir=str(model_dir))
+        cleanup_pytorch_weights(Path(model_dir))
     else:
         logger.info("Model directory already present: %s", model_dir)
 

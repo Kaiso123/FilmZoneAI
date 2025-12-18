@@ -1,0 +1,9 @@
+
+app/mcp_server
+
+
+__pycache__
+*.pyc
+.git
+.env
+venv

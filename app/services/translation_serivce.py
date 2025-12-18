@@ -28,9 +28,38 @@ def ensure_model_downloaded(model_id: str):
         snapshot_download(
             repo_id=f"{model_id}",
             local_dir=str(model_dir),
-            local_dir_use_symlinks=False
+            local_dir_use_symlinks=False,
+            allow_patterns=[
+                "config.json", 
+                "pytorch_model.bin", 
+                "tokenizer*", 
+                "vocab*", 
+                "special_tokens_map.json",
+                "*.txt"          
+            ],
+            ignore_patterns=[
+                "*.h5",          
+                "*.msgpack",     
+                "*.ot",         
+                ".git*",         
+                "*.onnx"         
+            ]
         )
     return model_dir
+
+def _cleanup_hf_weights(hf_model_path: Path):
+    """
+    Xóa pytorch_model.bin sau khi convert sang CT2 thành công
+    """
+    weight_files = [
+        hf_model_path / "pytorch_model.bin",
+        hf_model_path / "pytorch_model.bin.index.json"
+    ]
+
+    for f in weight_files:
+        if f.exists():
+            f.unlink()
+            logger.info("Removed HF weight file: %s", f)
 
 def ensure_model_converted(model_id: str):
     model_dir = _ct2_model_dir(model_id)
@@ -48,6 +77,13 @@ def ensure_model_converted(model_id: str):
         ]
         try:
             subprocess.run(cmd, check=True)
+            ct2_model_bin = model_dir / "model.bin"
+            if ct2_model_bin.exists():
+                _cleanup_hf_weights(hf_model_path)
+            else:
+                logger.warning(
+                    "CTranslate2 model.bin not found, skipping cleanup"
+                )
         except subprocess.CalledProcessError as e:
             logger.error("Error converting model: %s", e)
             raise
@@ -70,7 +106,7 @@ def get_translator(model_id: str):
     return translator
 
 #envit5-translation
-def translate_text(inputs: list[str], model_id: str = "envit5-translation") -> list[str]:
+def translate_text(inputs: list[str], model_id: str = "VietAI/envit5-translation") -> list[str]:
     """
     Dịch list các câu (inputs) sang tiếng Việt hoặc tiếng anh.
     """
@@ -87,7 +123,7 @@ def translate_text(inputs: list[str], model_id: str = "envit5-translation") -> l
         outputs.append(tokenizer.convert_tokens_to_string(hyp))
     return outputs
 
-def translate_segments(segments: list[dict], language: str, model_id: str = "envit5-translation"):
+def translate_segments(segments: list[dict], language: str, model_id: str = "VietAI/envit5-translation"):
     """
     Dịch list segments (mỗi segment có start, end, text).
     Trả về dict gồm:
@@ -101,6 +137,8 @@ def translate_segments(segments: list[dict], language: str, model_id: str = "env
 
     from transformers import AutoTokenizer
     tokenizer = AutoTokenizer.from_pretrained(_hf_model_dir(model_id))
+    
+    # Prefix cho model dịch (ví dụ: "vi: Hello world")
     texts = [f"{language}: {seg['text']}" for seg in segments]
     tokenized = [tokenizer.tokenize(text) for text in texts]
     results = translator.translate_batch(tokenized)
@@ -112,7 +150,7 @@ def translate_segments(segments: list[dict], language: str, model_id: str = "env
         outputs.append({
             "start": seg["start"],
             "end": seg["end"],
-            "text": translated_text[3:]
+            "text": translated_text[4:]
         })
 
     # build SRT string

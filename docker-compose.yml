@@ -1,0 +1,47 @@
+version: '3.8'
+
+services:
+  redis:
+    image: redis:alpine
+    container_name: aifilm_redis
+    ports:
+      - "6379:6379"
+    restart: always
+
+  # -------------------------------------------------------
+  # Service API (Đóng vai trò Builder chính)
+  # -------------------------------------------------------
+  api:
+    image: kaiso1231241/aifilm-core:latest 
+    build: .  
+    container_name: aifilm_api
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000
+    volumes:
+      - ./storage:/AIFilmZone/storage
+    ports:
+      - "8000:8000"
+    environment: &common-env 
+      CELERY_BROKER_URL: redis://redis:6379/0
+      CELERY_RESULT_BACKEND: redis://redis:6379/0
+    depends_on:
+      - redis
+    restart: always
+
+  # -------------------------------------------------------
+  # Service Worker
+  # -------------------------------------------------------
+  worker:
+    image: kaiso1231241/aifilm-core:latest 
+    
+    container_name: aifilm_worker
+    command: python -m celery -A app.core.celery_app worker --loglevel=info -c 1
+    volumes:
+      - ./storage:/AIFilmZone/storage
+      - ./model_cache:/root/.cache/huggingface
+    
+    environment: *common-env 
+    
+    depends_on:
+      - redis
+      - api
+    restart: always

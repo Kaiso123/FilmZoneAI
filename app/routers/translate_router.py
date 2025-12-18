@@ -1,6 +1,8 @@
-from fastapi import APIRouter, HTTPException, Body, Depends
-from ..services.translation_serivce import translate_text, translate_segments
-from ..models.translateModels import TranslateRequest, TranslateResponse, TranslateSegmentSrt, TranslateSegmentsRequest
+from fastapi import APIRouter, HTTPException, Depends
+from fastapi.responses import JSONResponse
+from celery.result import AsyncResult
+from ..models.translateModels import TranslateRequest, TranslateSegmentsRequest
+from ..tasks.worker import task_translate_text, task_translate_segments
 from .dependencies import get_token_header
 
 router = APIRouter(prefix="/translate", 
@@ -8,19 +10,59 @@ router = APIRouter(prefix="/translate",
                    dependencies=[Depends(get_token_header)], 
                    responses={401: {"description": "Unauthorized"}})
 
-
-@router.post("/text", response_model=TranslateResponse)
-async def translate(request: TranslateRequest):
+@router.post("/text")
+async def translate_text_endpoint(request: TranslateRequest):
+    """
+    Gửi yêu cầu dịch văn bản vào hàng đợi.
+    """
     try:
-        outputs = translate_text(request.texts)
-        return TranslateResponse(translations=outputs)
+        # Đẩy list text vào Redis queue
+        task = task_translate_text.delay(request.texts, "VietAI/envit5-translation")
+        
+        return {
+            "task_id": task.id,
+            "status": "processing",
+            "message": "Translation task started."
+        }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
     
-@router.post("/segments", response_model=TranslateSegmentSrt)
-async def translate_segmentss(request: TranslateSegmentsRequest):
+@router.post("/segments")
+async def translate_segments_endpoint(request: TranslateSegmentsRequest):
+    """
+    Gửi yêu cầu dịch segments vào hàng đợi.
+    """
     try:
-        srt_str, segments = translate_segments(request.segments, request.language)
-        return TranslateSegmentSrt(srt=srt_str, segments=segments)
+        task = task_translate_segments.delay(
+            request.segments, 
+            request.language, 
+            "VietAI/envit5-translation"
+        )
+        
+        return {
+            "task_id": task.id,
+            "status": "processing",
+            "message": "Segment translation task started."
+        }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+@router.get("/status/{task_id}")
+async def get_translate_status(task_id: str):
+    """
+    Kiểm tra trạng thái task dịch thuật.
+    """
+    task_result = AsyncResult(task_id)
+    
+    response = {
+        "task_id": task_id,
+        "status": task_result.status,
+        "result": None
+    }
+    
+    if task_result.status == 'SUCCESS':
+        response["result"] = task_result.result
+    elif task_result.status == 'FAILURE':
+        response["error"] = str(task_result.result)
+        
+    return JSONResponse(content=response)

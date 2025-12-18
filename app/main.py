@@ -1,10 +1,10 @@
-import contextlib
+# import contextlib
 from datetime import timedelta
 import logging
-from contextlib import asynccontextmanager
+# from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from .core.security import create_access_token
+# from .core.security import create_access_token, verify_token
 from .core.config import settings
 from .routers.transcribe_router import router as transcribe_router
 from .routers.translate_router import router as translate_router
@@ -45,8 +45,6 @@ app.add_middleware(
 # mount routers
 app.include_router(transcribe_router)
 app.include_router(translate_router)
-
-
 
 @app.get("/")
 async def root():

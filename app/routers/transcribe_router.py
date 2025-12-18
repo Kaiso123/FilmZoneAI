@@ -1,4 +1,4 @@
-from fastapi import APIRouter, UploadFile, File, Form, HTTPException
+from fastapi import APIRouter, UploadFile, File, Form, HTTPException, Depends
 from fastapi.responses import JSONResponse
 from celery.result import AsyncResult
 import shutil
@@ -7,8 +7,12 @@ import uuid
 from ..core.config import settings
 from ..tasks.worker import task_transcribe, task_transcribe_srt
 from ..utils.file_utils import ensure_dir
+from .dependencies import get_token_header
 
-router = APIRouter(prefix="/transcribe", tags=["Transcribe"])
+router = APIRouter(prefix="/transcribe", 
+                   tags=["Transcribe"],
+                   dependencies=[Depends(get_token_header)], 
+                   responses={401: {"description": "Unauthorized"}})
 
 # Đảm bảo thư mục temp tồn tại
 TEMP_DIR = os.path.join(settings.STORAGE_DIR, "temp_uploads")
