@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, HTTPException, Depends, Form
 from fastapi.responses import JSONResponse
 from celery.result import AsyncResult
 from ..models.translateModels import TranslateRequest, TranslateSegmentsRequest
@@ -11,13 +11,17 @@ router = APIRouter(prefix="/translate",
                    responses={401: {"description": "Unauthorized"}})
 
 @router.post("/text")
-async def translate_text_endpoint(request: TranslateRequest):
+async def translate_text_endpoint(
+    request: TranslateRequest,
+    type: str = Form(..., description="movie | episode"),
+    source_id: str = Form(..., description="movie_id or episode_id"), 
+    ):
     """
     Gửi yêu cầu dịch văn bản vào hàng đợi.
     """
     try:
         # Đẩy list text vào Redis queue
-        task = task_translate_text.delay(request.texts, "VietAI/envit5-translation")
+        task = task_translate_text.delay(request.texts, "VietAI/envit5-translation", type, source_id)
         
         return {
             "task_id": task.id,
@@ -28,7 +32,11 @@ async def translate_text_endpoint(request: TranslateRequest):
         raise HTTPException(status_code=500, detail=str(e))
     
 @router.post("/segments")
-async def translate_segments_endpoint(request: TranslateSegmentsRequest):
+async def translate_segments_endpoint(
+    request: TranslateSegmentsRequest,
+    type: str = Form(..., description="movie | episode"),
+    source_id: str = Form(..., description="movie_id or episode_id"),
+    ):
     """
     Gửi yêu cầu dịch segments vào hàng đợi.
     """
@@ -36,7 +44,9 @@ async def translate_segments_endpoint(request: TranslateSegmentsRequest):
         task = task_translate_segments.delay(
             request.segments, 
             request.language, 
-            "VietAI/envit5-translation"
+            "VietAI/envit5-translation",
+            type,
+            source_id
         )
         
         return {

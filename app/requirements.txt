@@ -15,6 +15,7 @@ python-multipart==0.0.9
 redis==7.1.0
 rq==2.6.1
 celery
+httpx
 # httpx-sse==0.4.1
 # # mcp==1.14.1
 # sse-starlette==3.0.2
