@@ -13,15 +13,13 @@ router = APIRouter(prefix="/translate",
 @router.post("/text")
 async def translate_text_endpoint(
     request: TranslateRequest,
-    type: str = Form(..., description="movie | episode"),
-    source_id: str = Form(..., description="movie_id or episode_id"), 
     ):
     """
     Gửi yêu cầu dịch văn bản vào hàng đợi.
     """
     try:
         # Đẩy list text vào Redis queue
-        task = task_translate_text.delay(request.texts, "VietAI/envit5-translation", type, source_id)
+        task = task_translate_text.delay(request.texts, "VietAI/envit5-translation", request.type, request.source_id)
         
         return {
             "task_id": task.id,
@@ -34,8 +32,6 @@ async def translate_text_endpoint(
 @router.post("/segments")
 async def translate_segments_endpoint(
     request: TranslateSegmentsRequest,
-    type: str = Form(..., description="movie | episode"),
-    source_id: str = Form(..., description="movie_id or episode_id"),
     ):
     """
     Gửi yêu cầu dịch segments vào hàng đợi.
@@ -45,8 +41,8 @@ async def translate_segments_endpoint(
             request.segments, 
             request.language, 
             "VietAI/envit5-translation",
-            type,
-            source_id
+            request.type,
+            request.source_id
         )
         
         return {

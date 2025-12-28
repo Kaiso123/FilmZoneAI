@@ -4,6 +4,8 @@ from typing import List
 class TranslateRequest(BaseModel):
     texts: List[str] = Field(..., example=["vi: Xin chào", "en: Hello world"],
                              description="List of texts to translate, prefixed with target language code (e.g., 'en:', 'vi:')")
+    type: str = Field(..., description="movie | episode")
+    source_id: str
 
 class TranslateResponse(BaseModel):
     translations: List[str] = Field(..., example=["en: Hello world", "vi: Xin chào"])
@@ -11,7 +13,9 @@ class TranslateResponse(BaseModel):
 class TranslateSegmentsRequest(BaseModel):
     segments: List[dict] = Field(..., example=[{"start": 0.0, "end": 2.5, "text": "Hello world"}], 
                                  description="List of segments with start, end, and text")
-    language: str = Field(None, example="vi")
+    language: str = Field(None, example="en", description = 'Input language code, e.g., "en", "vi".')
+    type: str = Field(..., description="movie | episode")
+    source_id: str
     
 class TranslateSegmentSrt(BaseModel):
     srt: str

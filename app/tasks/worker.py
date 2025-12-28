@@ -34,13 +34,10 @@ def task_transcribe(self, file_path: str, model_id: str, type: str, source_id: i
         
         transcribe_res = transcribe(audio_path=file_path, model_id=model_id)
         
-        key_id = "movieSourceID"
-        if type == "episode":
-             key_id = "episodeSourceID" 
-        
         payload = {
-            key_id: source_id,
+            "source_id": source_id,
             "srt": "", 
+            'type': type,
             "language": transcribe_res.language,
             "raw_segments": transcribe_res.segments, 
             "text": transcribe_res.text 
@@ -68,12 +65,10 @@ def task_transcribe_srt(self, file_path: str, model_id: str, vad_threshold: floa
             vad_threshold=vad_threshold
         )
 
-        key_id = "movieSourceID"
-        if type == "episode":
-             key_id = "episodeSourceID" 
 
         payload = {
-            key_id: source_id,
+            "source_id": source_id,
+            'type': type,
             "srt": srt_str,
             "language": language,
             "raw_segments": raw_segments if raw_segments else segments 
@@ -90,7 +85,8 @@ def task_transcribe_srt(self, file_path: str, model_id: str, vad_threshold: floa
     except Exception as e:
         logger.error(f"Error in transcribe SRT task: {e}")
         error_payload = {
-             "movieSourceID": source_id,
+            "source_id": source_id,
+            'type': type,
              "error": str(e),
              "status": "FAILED"
         }
@@ -107,11 +103,9 @@ def task_translate_text(self, texts: list[str], model_id: str, type: str, source
     try:
         logger.info(f"Processing translate text task. Items: {len(texts)}")
         results = translate_text(inputs=texts, model_id=model_id)
-        key_id = "movieSourceID"
-        if type == "episode":
-            key_id = "episodeSourceID"
         payload = {
-            key_id: source_id,
+            "source_id": source_id,
+            'type': type,
             "translations": results
         }
         _send_webhook(payload)
@@ -133,13 +127,17 @@ def task_translate_segments(self, segments: list[dict], language: str, model_id:
             language=language, 
             model_id=model_id
         )
-        key_id = "movieSourceID"
-        if type == "episode":
-            key_id = "episodeSourceID"
+        if language == 'vi':
+            olanguage = 'en'
+        else:
+            olanguage = 'vi'
+
         payload = {
-            key_id: source_id,
+            "source_id": source_id,
+            'type': type,
             "srt": srt_str,
-            "segments": translated_segments
+            "language": olanguage,
+            "raw_segments": translated_segments
         }
         _send_webhook(payload)
         return payload
