@@ -45,3 +45,17 @@ services:
       - redis
       - api
     restart: always
+  # -------------------------------------------------------
+  # Service Ngrok 
+  # -------------------------------------------------------
+  ngrok:
+    image: ngrok/ngrok:latest
+    container_name: aifilm_ngrok
+    restart: unless-stopped
+    command: "http api:8000"
+    environment:
+      NGROK_AUTHTOKEN: "Your_Ngrok_Auth_Token_Here"
+    ports:
+      - "4040:4040" 
+    depends_on:
+      - api
