@@ -37,6 +37,7 @@ async def create_transcribe_task(
     output_format: str = Form("json", description="json or srt"),
     type: str = Form(..., description="movie | episode"),
     source_id: str = Form(..., description="movie_id or episode_id"),
+    isvad: bool = Form(False, description="Enable VAD segmentation")
 ):
     """
     Upload file và tạo task xử lý background.
@@ -48,7 +49,7 @@ async def create_transcribe_task(
         
         # 2. Gửi task vào Celery Queue
         if output_format == "srt":
-            task = task_transcribe_srt.delay(file_path, model_id, 0.2, type, source_id)
+            task = task_transcribe_srt.delay(file_path, model_id, 0.2, type, source_id, isvad)
         else:
             task = task_transcribe.delay(file_path, model_id)
             

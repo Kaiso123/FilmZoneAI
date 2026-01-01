@@ -117,7 +117,8 @@ def transcribe(audio_path: str, model_id: str = "turbo") -> TranscribeResponse:
 def transcribe2srt(audio_path: str, model_id: str = "turbo",
                    vad_threshold: float = 0.2,
                    min_speech_ms: int = 500,
-                   min_silence_ms: int = 1000) -> str:
+                   min_silence_ms: int = 1000,
+                   isvad: bool = False) -> str:
     """
     Transcribe audio -> trả về nội dung dạng SRT (string).
     Sử dụng Silero VAD để cắt đoạn trước, fallback về model.transcribe toàn file nếu VAD không khả dụng.
@@ -136,7 +137,8 @@ def transcribe2srt(audio_path: str, model_id: str = "turbo",
 
     all_segments = []
 
-    if vad_available:
+    if vad_available and isvad:
+        logger.info("VAD is enabled. Performing VAD segmentation.")
         # load audio nếu file là video
         audio_data, sr = load_audio_any(audio_path, sr=16000)
         vad_model = load_silero_vad()
@@ -209,7 +211,8 @@ def transcribe2srt(audio_path: str, model_id: str = "turbo",
                     except Exception:
                         pass
 
-    if not vad_available:
+    if not vad_available or not isvad:
+        logger.info("Performing without VAD.")
         # direct full-file transcribe (no VAD)
         segments, info = model.transcribe(
             audio_path,
@@ -218,6 +221,7 @@ def transcribe2srt(audio_path: str, model_id: str = "turbo",
             condition_on_previous_text=True,
             hallucination_silence_threshold=1,
         )
+        detected_lang = info.language
         all_segments = list(segments)
 
     # regroup using word timestamps (the function will handle segments without words)

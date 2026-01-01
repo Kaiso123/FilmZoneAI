@@ -55,14 +55,15 @@ def task_transcribe(self, file_path: str, model_id: str, type: str, source_id: i
         raise self.retry(exc=e, countdown=10, max_retries=3)
 
 @celery_app.task(bind=True, name="transcribe_srt_task")
-def task_transcribe_srt(self, file_path: str, model_id: str, vad_threshold: float, type: str, source_id: int):
+def task_transcribe_srt(self, file_path: str, model_id: str, vad_threshold: float, type: str, source_id: int, isvad: bool):
     try:
         logger.info(f"Processing SRT task for: {file_path} (ID: {source_id})")
         
         srt_str, segments, language, raw_segments = transcribe2srt(
             audio_path=file_path, 
             model_id=model_id,
-            vad_threshold=vad_threshold
+            vad_threshold=vad_threshold,
+            isvad=isvad
         )
 
 
